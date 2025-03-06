@@ -4,6 +4,11 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const paintings = await paintingDatamapper.findAll();
+      if (!paintings) {
+        return res
+          .status(404)
+          .json({ error: "Aucune peinture n'a été trouvé" });
+      }
       return res.status(200).send(paintings);
     } catch (error) {
       console.error(error);
