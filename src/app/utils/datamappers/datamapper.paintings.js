@@ -26,7 +26,7 @@ export async function createPainting(title, paintingUrl, description, price) {
   return result.rows[0];
 }
 
-export async function updatePainting(fields, index) {
+export async function updatePainting(fields, index, values) {
   const query = {
     text: `UPDATE "paintings" SET ${fields.join(
       ", "
@@ -34,7 +34,7 @@ export async function updatePainting(fields, index) {
     values,
   };
   const result = await client.query(query);
-  result.rows[0];
+  return result.rows[0];
 }
 
 export async function deletePainting(id) {
