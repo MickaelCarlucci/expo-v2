@@ -17,10 +17,16 @@ export async function findOne(id) {
   return result.rows;
 }
 
-export async function createPainting(title, paintingUrl, description, price) {
+export async function createPainting(
+  title,
+  paintingUrl,
+  description,
+  price,
+  userAdmin
+) {
   const query = {
-    text: `INSERT INTO "paintings" (title, painting_url, description, price) VALUES ($1, $2, $3, $4) RETURNING *;`,
-    values: [title, paintingUrl, description, price],
+    text: `INSERT INTO "paintings" (title, painting_url, description, price, user_admin_id) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
+    values: [title, paintingUrl, description, price, userAdmin],
   };
   const result = await client.query(query);
   return result.rows[0];
