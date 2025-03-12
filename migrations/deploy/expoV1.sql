@@ -22,10 +22,10 @@ CREATE table "paintings" (
 
 CREATE table "messages" (
     "id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    "email" VARCHAR(100) NOT NULL,
+    "email" VARCHAR(100) NOT NULL CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
     "message" TEXT NOT NULL,
-    "phone" VARCHAR(20) CHECK (phone ~ '^[0-9]+$'),
-    "user_admin_id" INT NOT NULL REFERENCES "user_admin"("id") ON DELETE CASCADE
+    "phone" VARCHAR(100) CHECK (phone ~ '^[0-9]+$'),
+    "user_admin_id" INT NOT NULL DEFAULT 1 REFERENCES "user_admin"("id") ON DELETE CASCADE
 );
 
 COMMIT;

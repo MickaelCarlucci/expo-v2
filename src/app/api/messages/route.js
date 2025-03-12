@@ -1,15 +1,16 @@
+import { NextResponse } from "next/server";
 import * as messagesDatamapper from "../../utils/datamappers/datamapper.messages.js";
 
 export async function GET() {
   try {
     const messages = await messagesDatamapper.findAll();
     if (!messages) {
-      return Response.json({ error: "Aucun messages" }, { status: 404 });
+      return NextResponse.json({ error: "Aucun messages" }, { status: 404 });
     }
-    return Response.json(messages, { status: 200 });
+    return NextResponse.json(messages, { status: 200 });
   } catch (error) {
     console.error(error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Impossible de charger les messages" },
       { status: 500 }
     );
@@ -19,27 +20,42 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
+    console.log("🔹 Données reçues :", body);
+
     const { email, message, phone } = body;
-    const userAdmin = 1;
 
     if (!email || !message) {
-      return Response.json(
-        { error: "les champs email et message sont obligatoires" },
+      return NextResponse.json(
+        { error: "Les champs email et message sont obligatoires" },
         { status: 400 }
       );
     }
 
+    // 🔹 Vérification du format du téléphone
+    if (phone && (!/^\d+$/.test(phone) || phone.length > 20)) {
+      return NextResponse.json(
+        {
+          error:
+            "Le téléphone doit contenir uniquement des chiffres et ne pas dépasser 20 caractères",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 🔹 Transformation du téléphone en `null` si non fourni
+    const phoneValue = phone ? phone.toString() : null;
+
     const newMessage = await messagesDatamapper.createMessage(
       email,
       message,
-      phone,
-      userAdmin
+      phoneValue
     );
-    return Response.json(newMessage, { status: 201 });
+
+    return NextResponse.json(newMessage, { status: 201 });
   } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Impossible d'enregistrer le nouveau message" },
+    console.error("❌ Erreur lors de l'enregistrement du message :", error);
+    return NextResponse.json(
+      { error: "Impossible d'enregistrer le message" },
       { status: 500 }
     );
   }
@@ -51,16 +67,16 @@ export async function DELETE(req) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return Response.json({ error: "ID manquant" }, { status: 400 });
+      return NextResponse.json({ error: "ID manquant" }, { status: 400 });
     }
     await messagesDatamapper.deleteMessage(id);
-    return Response.json(
+    return NextResponse.json(
       { message: "Le message a bien été supprimé" },
       { status: 200 }
     );
   } catch (error) {
     console.error(error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Impossible de supprimer le message" },
       { status: 500 }
     );
