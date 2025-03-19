@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import * as messagesDatamapper from "../../utils/datamappers/datamapper.messages.js";
+import sanitizeHtml from "sanitize-html";
+
+function cleanInput(input) {
+  return sanitizeHtml(input, {
+    allowedTags: [],
+    allowedAttributes: {},
+  }).trim();
+}
 
 export async function GET() {
   try {
@@ -22,7 +30,29 @@ export async function POST(req) {
     const body = await req.json();
     console.log("🔹 Données reçues :", body);
 
-    const { email, message, phone } = body;
+    const { email, message, phone, recaptchaToken } = body;
+
+    const isHuman = await verifyRecaptcha(recaptchaToken);
+    if (!isHuman) {
+      return NextResponse.json(
+        { error: "Vérification reCAPTCHA échouée." },
+        { status: 403 }
+      );
+    }
+
+    const ip = req.headers.get("x-forwarded-for") || req.ip || "unknown";
+    console.log("🔹 IP de l'utilisateur :", ip);
+
+    // 🛡 Vérifier si cette IP a dépassé la limite de 3 messages dans l'heure
+    const messageCount = await messagesDatamapper.countMessagesFromIp(ip);
+    if (messageCount >= 3) {
+      return NextResponse.json(
+        {
+          error: "Vous avez dépassé la limite de messages. Essayez plus tard.",
+        },
+        { status: 429 } // 429 = Trop de requêtes
+      );
+    }
 
     if (!email || !message) {
       return NextResponse.json(
@@ -42,13 +72,16 @@ export async function POST(req) {
       );
     }
 
+    const cleanEmail = cleanInput(email);
+    const cleanMessage = cleanInput(message);
     // 🔹 Transformation du téléphone en `null` si non fourni
     const phoneValue = phone ? phone.toString() : null;
 
     const newMessage = await messagesDatamapper.createMessage(
-      email,
-      message,
-      phoneValue
+      cleanEmail,
+      cleanMessage,
+      phoneValue,
+      ip
     );
 
     return NextResponse.json(newMessage, { status: 201 });
