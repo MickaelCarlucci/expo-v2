@@ -17,6 +17,7 @@ export default function NavAdminBar() {
         <div className="nav-left">
           <Link href="/">Accueil</Link>
           <Link href="/admin">messages</Link>
+          <Link href="/admin/paintings">Ajouter une oeuvre d&apos;Art</Link>
         </div>
         <div className="nav-right">
           {user ? (
