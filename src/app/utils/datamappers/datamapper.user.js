@@ -27,3 +27,28 @@ export async function updatePassword(newPassword, id) {
   const result = await client.query(query);
   return result.rows[0];
 }
+
+export async function saveSessionToken(userId, sessionToken) {
+  const query = {
+    text: `UPDATE user_admin SET session_token = $1 WHERE id = $2 RETURNING *`,
+    values: [sessionToken, userId],
+  };
+  const result = await client.query(query);
+  return result.rows[0];
+}
+
+export async function clearSessionToken(userId) {
+  await client.query(
+    `UPDATE user_admin SET session_token = NULL WHERE id = $1`,
+    [userId]
+  );
+}
+
+export async function getUserByToken(sessionToken) {
+  const query = {
+    text: `SELECT * from "user_admin" WHERE session_token = $1;`,
+    values: [sessionToken],
+  };
+  const result = await client.query(query);
+  return result.rows[0];
+}

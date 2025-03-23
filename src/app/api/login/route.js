@@ -35,6 +35,8 @@ export async function POST(req) {
     // 🔹 Création d'un token simple pour la session
     const sessionToken = Math.random().toString(36).substring(2);
 
+    await userDatamapper.saveSessionToken(user.id, sessionToken);
+
     // 🔹 Stocke le token dans un cookie sécurisé
     const cookie = serialize("session_token", sessionToken, {
       httpOnly: true,
@@ -55,14 +57,19 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-  const cookies = req.headers.get("cookie") || "";
-  const sessionToken = cookies
-    .split("; ")
-    .find((row) => row.startsWith("session_token="));
+  const cookieHeader = req.headers.get("cookie") || "";
+  const cookies = parse(cookieHeader);
+  const sessionToken = cookies.session_token;
 
   if (!sessionToken) {
-    return NextResponse.json({ loggedIn: false }, { status: 401 });
+    return NextResponse.json({ user: null }, { status: 200 });
   }
 
-  return NextResponse.json({ loggedIn: true }, { status: 200 });
+  const user = await userDatamapper.getUserByToken(sessionToken);
+
+  if (!user) {
+    return NextResponse.json({ user: null }, { status: 200 });
+  }
+
+  return NextResponse.json({ user }, { status: 200 });
 }
