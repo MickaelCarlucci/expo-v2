@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Page() {
   const [title, setTitle] = useState("");
-  const [artist, setArtist] = useState("");
-  const [year, setYear] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
 
@@ -18,7 +19,7 @@ export default function Page() {
     e.preventDefault();
 
     if (!image) {
-      alert("Veuillez choisir une image !");
+      alert("Veuillez choisir une photo !");
       return;
     }
 
@@ -32,6 +33,7 @@ export default function Page() {
     });
 
     const uploadData = await uploadRes.json();
+    console.log("Upload response:", uploadData);
     if (!uploadRes.ok) {
       alert(uploadData.error);
       return;
@@ -43,7 +45,13 @@ export default function Page() {
     const paintingRes = await fetch("/api/paintings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, imageUrl, description, price }),
+      body: JSON.stringify({
+        title,
+        paintingUrl: imageUrl,
+        description,
+        price: parseFloat(price),
+        userAdmin: 1,
+      }),
     });
 
     const paintingData = await paintingRes.json();
@@ -65,16 +73,16 @@ export default function Page() {
       />
       <input
         type="text"
-        placeholder="Artiste"
-        value={artist}
-        onChange={(e) => setArtist(e.target.value)}
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
         required
       />
       <input
         type="number"
-        placeholder="Année"
-        value={year}
-        onChange={(e) => setYear(e.target.value)}
+        placeholder="Prix"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
         required
       />
 
@@ -84,7 +92,15 @@ export default function Page() {
         onChange={handleImageChange}
         required
       />
-      {preview && <image src={preview} alt="Aperçu" width="100" />}
+      {preview && (
+        <Image
+          src={preview}
+          alt="Aperçu"
+          width={100}
+          height={100}
+          style={{ objectFit: "cover" }}
+        />
+      )}
 
       <button type="submit">Ajouter le tableau</button>
     </form>
